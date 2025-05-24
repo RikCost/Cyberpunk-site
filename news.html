@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetLink - Night City News</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* News Page Specific Styles */
+        .news-container {
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+        
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+        
+        .news-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .news-title::before {
+            content: "//";
+            color: var(--accent-color);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .news-date {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-color);
+            font-size: 16px;
+        }
+        
+        .news-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .news-tab {
+            background: none;
+            border: 1px solid var(--accent-color);
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .news-tab.active, .news-tab:hover {
+            background-color: rgba(0, 243, 255, 0.2);
+            color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+        
+        .news-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        
+        .news-main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .news-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .news-article {
+            background-color: rgba(10, 10, 18, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .news-article:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+        
+        .news-article-header {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .news-article-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(30%) contrast(120%);
+            transition: all 0.3s;
+        }
+        
+        .news-article:hover .news-article-header img {
+            filter: grayscale(0%) contrast(110%);
+            transform: scale(1.05);
+        }
+        
+        .news-article-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(10, 10, 18, 0.2), rgba(10, 10, 18, 0.8));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+        }
+        
+        .news-article-category {
+            display: inline-block;
+            background-color: rgba(0, 243, 255, 0.2);
+            color: var(--accent-color);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 10px;
+        }
+        
+        .news-article-category.corporate {
+            background-color: rgba(255, 0, 160, 0.2);
+            color: var(--neon-pink);
+        }
+        
+        .news-article-category.crime {
+            background-color: rgba(255, 0, 0, 0.2);
+            color: #ff3333;
+        }
+        
+        .news-article-category.tech {
+            background-color: rgba(255, 255, 0, 0.2);
+            color: var(--neon-yellow);
+        }
+        
+        .news-article-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .news-article-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .news-article-source {
+            font-weight: 600;
+        }
+        
+        .news-article-date {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .news-article-body {
+            padding: 20px;
+        }
+        
+        .news-article-summary {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .news-article-content {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .news-article-content p {
+            margin-bottom: 15px;
+        }
+        
+        .news-article-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .news-article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .news-article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .news-article-tag {
+            background-color: rgba(0, 243, 255, 0.1);
+            color: var(--accent-color);
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .news-article-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .news-article-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-color);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        
+        .news-article-action:hover {
+            color: var(--accent-color);
+        }
+        
+        .news-sidebar-section {
+            background-color: rgba(10, 10, 18, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .news-sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--neon-pink);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .trending-news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .trending-news-item {
+            display: flex;
+            gap: 10px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .trending-news-item:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .trending-news-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        
+        .trending-news-content {
+            flex: 1;
+        }
+        
+        .trending-news-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+        
+        .trending-news-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .advertisement {
+            position: relative;
+            overflow: hidden;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .advertisement img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .advertisement::after {
+            content: "ADVERTISEMENT";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .weather-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .weather-location {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .weather-date {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .weather-current {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .weather-icon {
+            font-size: 40px;
+            color: var(--neon-yellow);
+        }
+        
+        .weather-temp {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .weather-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .weather-condition {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .weather-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .weather-warning {
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: #ff6666;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .weather-warning-icon {
+            font-size: 20px;
+        }
+        
+        .stock-market {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .stock-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stock-item:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .stock-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stock-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .stock-symbol {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .stock-price {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .stock-change {
+            font-size: 14px;
+            text-align: right;
+        }
+        
+        .stock-change.up {
+            color: #00ff00;
+        }
+        
+        .stock-change.down {
+            color: #ff0000;
+        }
+        
+        .classified-ads {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .classified-ad {
+            background-color: rgba(10, 10, 18, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            transition: all 0.3s;
+        }
+        
+        .classified-ad:hover {
+            background-color: rgba(10, 10, 18, 0.5);
+            border-color: var(--accent-color);
+        }
+        
+        .classified-ad-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .classified-ad-content {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .classified-ad-contact {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-color);
+        }
+        
+        .news-section {
+            display: none;
+        }
+        
+        .news-section.active {
+            display: block;
+        }
+        
+        .full-article {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(5, 5, 10, 0.95);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 50px 0;
+        }
+        
+        .full-article.active {
+            display: block;
+        }
+        
+        .full-article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .full-article-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .full-article-close:hover {
+            background-color: rgba(255, 0, 0, 0.5);
+        }
+        
+        .full-article-header {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+        }
+        
+        .full-article-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .full-article-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(10, 10, 18, 0.2), rgba(10, 10, 18, 0.8));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 30px;
+        }
+        
+        .full-article-category {
+            display: inline-block;
+            background-color: rgba(0, 243, 255, 0.2);
+            color: var(--accent-color);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 15px;
+        }
+        
+        .full-article-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .full-article-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .full-article-source {
+            font-weight: 600;
+        }
+        
+        .full-article-date {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .full-article-body {
+            padding: 30px;
+        }
+        
+        .full-article-content {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        
+        .full-article-content p {
+            margin-bottom: 20px;
+        }
+        
+        .full-article-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .full-article-quote {
+            border-left: 3px solid var(--accent-color);
+            padding-left: 20px;
+            margin: 30px 0;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .full-article-image {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin: 30px 0;
+        }
+        
+        .full-article-caption {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .full-article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .full-article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .full-article-tag {
+            background-color: rgba(0, 243, 255, 0.1);
+            color: var(--accent-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .full-article-actions {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .full-article-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-color);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+        
+        .full-article-action:hover {
+            color: var(--accent-color);
+        }
+        
+        .corporate-sponsored {
+            position: relative;
+        }
+        
+        .corporate-sponsored::before {
+            content: "CORPORATE SPONSORED";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 0, 160, 0.2);
+            color: var(--neon-pink);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: 'Share Tech Mono', monospace;
+            z-index: 1;
+        }
+        
+        .censored {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: transparent;
+            border-radius: 3px;
+            user-select: none;
+            position: relative;
+        }
+        
+        .censored::selection {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: transparent;
+        }
+        
+        .glitch-text {
+            position: relative;
+            display: inline-block;
+            color: var(--accent-color);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+        
+        .glitch-text::before {
+            color: var(--neon-pink);
+            z-index: -1;
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+        
+        .glitch-text::after {
+            color: var(--neon-blue);
+            z-index: -2;
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        
+        @media (max-width: 1024px) {
+            .news-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-line"></div>
+    
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">NET<span>LINK</span></div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="news.html" class="active">News</a></li>
+                        <li><a href="watchable_profiles.html">Profiles</a></li>
+                        <li><a href="messages.html">Messages</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="main-content">
+            <div class="profile-card neon-border">
+                <div class="profile-header">
+                    <img src="images/profiles/profile1.jpg" alt="Profile Picture" class="profile-pic">
+                    <div class="profile-info">
+                        <div class="profile-name">V</div>
+                        <div class="profile-handle">@v_merc</div>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">142</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">87</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">85</div>
+                        <div class="stat-label">Street Cred</div>
+                    </div>
+                </div>
+                
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Role</div>
+                        <div class="detail-value">Solo</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Faction</div>
+                        <div class="detail-value">Afterlife</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Style</div>
+                        <div class="detail-value">Streetkid</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feed">
+                <div class="news-container">
+                    <div class="news-header">
+                        <h2 class="news-title">Night City News</h2>
+                        <div class="news-date">2020-06-15</div>
+                    </div>
+                    
+                    <div class="news-tabs">
+                        <button class="news-tab active" data-tab="headlines">Headlines</button>
+                        <button class="news-tab" data-tab="corporate">Corporate</button>
+                        <button class="news-tab" data-tab="crime">Crime & Gangs</button>
+                        <button class="news-tab" data-tab="tech">Technology</button>
+                        <button class="news-tab" data-tab="entertainment">Entertainment</button>
+                        <button class="news-tab" data-tab="classified">Classified Ads</button>
+                    </div>
+                    
+                    <!-- Headlines Section -->
+                    <div class="news-section headlines-section active">
+                        <div class="news-content">
+                            <div class="news-main">
+                                <!-- Main Article -->
+                                <div class="news-article">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post1.jpg" alt="Arasaka Tower">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category corporate">Corporate</div>
+                                            <h3 class="news-article-title">Arasaka Unveils New Security Division Amid Rising Corporate Tensions</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">N54 News</div>
+                                                <div class="news-article-date">2020-06-15</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            Arasaka Corporation has announced the formation of a new security division focused on counter-corporate espionage, raising concerns about escalating tensions in the ongoing shadow war between megacorporations.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>NIGHT CITY - In a move that analysts are calling a significant escalation in corporate hostilities, Arasaka Corporation has unveiled its new "Sentinel Division," a specialized security force dedicated to counter-intelligence and anti-corporate espionage operations.</p>
+                                            <p>The announcement comes just weeks after a series of high-profile data breaches at Militech facilities across Night City, though Arasaka representatives deny any connection between the two events.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Arasaka</div>
+                                                <div class="news-article-tag">Corporate War</div>
+                                                <div class="news-article-tag">Security</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="arasaka-security">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Secondary Articles -->
+                                <div class="news-article">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post2.jpg" alt="Gang Violence">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category crime">Crime</div>
+                                            <h3 class="news-article-title">Maelstrom Gang Territory Expands Following Bloody Clash with Tyger Claws</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">NC Street Press</div>
+                                                <div class="news-article-date">2020-06-14</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            The chrome-heavy Maelstrom gang has seized control of three blocks in northern Watson following a violent confrontation with Tyger Claws, leaving dozens dead and local businesses scrambling for protection.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>WATSON DISTRICT - In what locals are describing as "a war zone," Maelstrom gang members have successfully pushed Tyger Claws out of a significant portion of northern Watson, expanding their territory and control over local black market operations.</p>
+                                            <p>NCPD reports indicate at least 27 confirmed casualties, though sources on the ground suggest the actual death toll may be significantly higher.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Maelstrom</div>
+                                                <div class="news-article-tag">Tyger Claws</div>
+                                                <div class="news-article-tag">Gang War</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="maelstrom-expansion">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="news-article corporate-sponsored">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post3.jpg" alt="Biotechnica Lab">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category tech">Technology</div>
+                                            <h3 class="news-article-title">Biotechnica Announces Breakthrough in Neural Interface Technology</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">Tech Tomorrow</div>
+                                                <div class="news-article-date">2020-06-13</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            Biotechnica researchers have developed a new neural interface that promises to reduce rejection rates by 78%, potentially revolutionizing the cyberware industry and making augmentations accessible to millions more consumers.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>NIGHT CITY - Biotechnica has unveiled what it calls a "game-changing" advancement in neural interface technology, dramatically reducing the risk of cyberware rejection and potentially opening the door to more widespread augmentation adoption.</p>
+                                            <p>The new "SynLink" interface uses proprietary biocompatible materials that significantly reduce the immune response typically associated with cyberware implantation.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Biotechnica</div>
+                                                <div class="news-article-tag">Cyberware</div>
+                                                <div class="news-article-tag">Medical</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="biotechnica-neural">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="news-sidebar">
+                                <!-- Weather Widget -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Weather</h3>
+                                    <div class="weather-widget">
+                                        <div class="weather-header">
+                                            <div class="weather-location">Night City</div>
+                                            <div class="weather-date">2020-06-15</div>
+                                        </div>
+                                        <div class="weather-current">
+                                            <div class="weather-icon">☀️</div>
+                                            <div class="weather-temp">32°C</div>
+                                            <div class="weather-details">
+                                                <div class="weather-condition">Smog Alert</div>
+                                                <div class="weather-stats">
+                                                    <div>Humidity: 65%</div>
+                                                    <div>Wind: 12 km/h</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="weather-warning">
+                                            <div class="weather-warning-icon">⚠️</div>
+                                            <div>Toxic particulate levels exceed safety standards. Respiratory filters advised.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Trending News -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Trending News</h3>
+                                    <div class="trending-news-list">
+                                        <div class="trending-news-item">
+                                            <img src="images/posts/post1.jpg" alt="News" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Militech Stock Plummets Following Failed Military Contract</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Corporate</div>
+                                                    <div>2 hours ago</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <img src="images/posts/post2.jpg" alt="News" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Samurai Reunion Concert Sells Out in 3 Minutes</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Entertainment</div>
+                                                    <div>5 hours ago</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <img src="images/posts/post3.jpg" alt="News" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">NCPD Raid Uncovers Illegal Braindance Studio in Pacifica</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Crime</div>
+                                                    <div>8 hours ago</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Advertisement -->
+                                <div class="advertisement">
+                                    <img src="images/posts/post1.jpg" alt="Advertisement">
+                                </div>
+                                
+                                <!-- Stock Market -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Stock Market</h3>
+                                    <div class="stock-market">
+                                        <div class="stock-list">
+                                            <div class="stock-item">
+                                                <div class="stock-info">
+                                                    <div class="stock-name">Arasaka</div>
+                                                    <div class="stock-symbol">ASK</div>
+                                                </div>
+                                                <div class="stock-data">
+                                                    <div class="stock-price">¥4,328.75</div>
+                                                    <div class="stock-change up">+2.3%</div>
+                                                </div>
+                                            </div>
+                                            <div class="stock-item">
+                                                <div class="stock-info">
+                                                    <div class="stock-name">Militech</div>
+                                                    <div class="stock-symbol">MLT</div>
+                                                </div>
+                                                <div class="stock-data">
+                                                    <div class="stock-price">¥2,187.30</div>
+                                                    <div class="stock-change down">-4.7%</div>
+                                                </div>
+                                            </div>
+                                            <div class="stock-item">
+                                                <div class="stock-info">
+                                                    <div class="stock-name">Biotechnica</div>
+                                                    <div class="stock-symbol">BIO</div>
+                                                </div>
+                                                <div class="stock-data">
+                                                    <div class="stock-price">¥1,856.42</div>
+                                                    <div class="stock-change up">+5.2%</div>
+                                                </div>
+                                            </div>
+                                            <div class="stock-item">
+                                                <div class="stock-info">
+                                                    <div class="stock-name">Trauma Team</div>
+                                                    <div class="stock-symbol">TRM</div>
+                                                </div>
+                                                <div class="stock-data">
+                                                    <div class="stock-price">¥3,012.88</div>
+                                                    <div class="stock-change up">+1.8%</div>
+                                                </div>
+                                            </div>
+                                            <div class="stock-item">
+                                                <div class="stock-info">
+                                                    <div class="stock-name">Night Corp</div>
+                                                    <div class="stock-symbol">NTC</div>
+                                                </div>
+                                                <div class="stock-data">
+                                                    <div class="stock-price">¥2,745.60</div>
+                                                    <div class="stock-change down">-0.9%</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Corporate Section -->
+                    <div class="news-section corporate-section">
+                        <div class="news-content">
+                            <div class="news-main">
+                                <div class="news-article corporate-sponsored">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post1.jpg" alt="Arasaka Tower">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category corporate">Corporate</div>
+                                            <h3 class="news-article-title">Arasaka Announces Record Profits for Q2 2020</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">Corporate Times</div>
+                                                <div class="news-article-date">2020-06-15</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            Arasaka Corporation has reported a 23% increase in quarterly profits, exceeding analyst expectations and cementing its position as Night City's dominant corporate force.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>NIGHT CITY - Arasaka Corporation announced today that its second-quarter profits have exceeded market expectations by 17%, with total revenue reaching ¥1.2 trillion, a 23% increase year-over-year.</p>
+                                            <p>CEO Saburo Arasaka attributed the growth to expanded security contracts and the successful launch of the company's new cybersecurity division, which has already secured contracts with three other major corporations.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Arasaka</div>
+                                                <div class="news-article-tag">Finance</div>
+                                                <div class="news-article-tag">Corporate</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="arasaka-profits">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="news-article">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post3.jpg" alt="Militech Headquarters">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category corporate">Corporate</div>
+                                            <h3 class="news-article-title">Militech Loses Key Government Contract to Arasaka Subsidiary</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">NC Business Journal</div>
+                                                <div class="news-article-date">2020-06-14</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            In a surprising development, Militech has lost a ¥500 billion NUSA defense contract to an Arasaka subsidiary, marking a significant shift in the balance of corporate power.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>NIGHT CITY - Militech Corporation's stock plummeted 12% today following the announcement that the company has lost a key NUSA defense contract worth an estimated ¥500 billion over five years.</p>
+                                            <p>The contract, which involves supplying next-generation combat systems to NUSA military forces, was instead awarded to Tsunami Defense Systems, a subsidiary of Arasaka Corporation, in what analysts are calling a "stunning upset."</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Militech</div>
+                                                <div class="news-article-tag">Arasaka</div>
+                                                <div class="news-article-tag">Defense Contract</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="militech-contract">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="news-article">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post2.jpg" alt="Night Corp Tower">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category corporate">Corporate</div>
+                                            <h3 class="news-article-title">Night Corp Unveils Ambitious Urban Renewal Project for Pacifica</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">Night City Today</div>
+                                                <div class="news-article-date">2020-06-13</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            Night Corporation has announced a ¥2 trillion investment to transform Pacifica into a "model district," though critics question the corporation's motives and the fate of current residents.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>NIGHT CITY - Night Corporation has unveiled plans for what it calls "the most ambitious urban renewal project in Night City's history," a ¥2 trillion investment aimed at transforming the troubled Pacifica district into a "model of corporate-community partnership."</p>
+                                            <p>The project, dubbed "New Pacifica," will include luxury residential towers, commercial complexes, and a state-of-the-art security infrastructure, according to Night Corp CEO Toshiro Reed.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Night Corp</div>
+                                                <div class="news-article-tag">Pacifica</div>
+                                                <div class="news-article-tag">Urban Development</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="night-corp-pacifica">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="news-sidebar">
+                                <!-- Corporate Profiles -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Corporate Profiles</h3>
+                                    <div class="trending-news-list">
+                                        <div class="trending-news-item">
+                                            <img src="images/posts/post1.jpg" alt="Saburo Arasaka" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Saburo Arasaka: The Emperor of Night City</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Profile</div>
+                                                    <div>Arasaka Corp</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <img src="images/posts/post2.jpg" alt="Donald Lundee" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Donald Lundee: Militech's War Machine</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Profile</div>
+                                                    <div>Militech</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <img src="images/posts/post3.jpg" alt="Elizabeth Kress" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Elizabeth Kress: NUSA's Corporate President</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Profile</div>
+                                                    <div>NUSA Gov</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Advertisement -->
+                                <div class="advertisement">
+                                    <img src="images/posts/post2.jpg" alt="Advertisement">
+                                </div>
+                                
+                                <!-- Corporate Mergers & Acquisitions -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Mergers & Acquisitions</h3>
+                                    <div class="trending-news-list">
+                                        <div class="trending-news-item">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Biotechnica Acquires MediGen for ¥350 Billion</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Acquisition</div>
+                                                    <div>2 days ago</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Orbital Air Merges with Continental Shipping</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Merger</div>
+                                                    <div>1 week ago</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Petrochem Hostile Takeover of SovOil Subsidiary</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Takeover</div>
+                                                    <div>2 weeks ago</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Crime & Gangs Section -->
+                    <div class="news-section crime-section">
+                        <div class="news-content">
+                            <div class="news-main">
+                                <div class="news-article">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post2.jpg" alt="Gang Violence">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category crime">Crime</div>
+                                            <h3 class="news-article-title">Maelstrom Gang Territory Expands Following Bloody Clash with Tyger Claws</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">NC Street Press</div>
+                                                <div class="news-article-date">2020-06-14</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            The chrome-heavy Maelstrom gang has seized control of three blocks in northern Watson following a violent confrontation with Tyger Claws, leaving dozens dead and local businesses scrambling for protection.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>WATSON DISTRICT - In what locals are describing as "a war zone," Maelstrom gang members have successfully pushed Tyger Claws out of a significant portion of northern Watson, expanding their territory and control over local black market operations.</p>
+                                            <p>NCPD reports indicate at least 27 confirmed casualties, though sources on the ground suggest the actual death toll may be significantly higher. The conflict reportedly erupted over control of a valuable black market cyberware operation.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Maelstrom</div>
+                                                <div class="news-article-tag">Tyger Claws</div>
+                                                <div class="news-article-tag">Gang War</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="maelstrom-expansion">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="news-article">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post3.jpg" alt="Cyberpsycho">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category crime">Crime</div>
+                                            <h3 class="news-article-title">Cyberpsycho Rampage in Kabuki Market Leaves 12 Dead</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">Night City Sentinel</div>
+                                                <div class="news-article-date">2020-06-13</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            A heavily augmented individual suffering from cyberpsychosis went on a killing spree in Kabuki Market yesterday, highlighting the growing crisis of cyberware-induced mental instability in Night City.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>KABUKI MARKET - Twelve people are dead and twenty-three injured after a cyberpsychosis incident at the crowded Kabuki Market yesterday afternoon. The perpetrator, identified as former Militech security specialist James Chen, was eventually neutralized by MaxTac forces after a tense 30-minute standoff.</p>
+                                            <p>Witnesses describe Chen as "more machine than human," with extensive visible cyberware modifications. This marks the fifth major cyberpsycho incident in Night City this month.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">Cyberpsycho</div>
+                                                <div class="news-article-tag">MaxTac</div>
+                                                <div class="news-article-tag">Kabuki</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="cyberpsycho-kabuki">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="news-article">
+                                    <div class="news-article-header">
+                                        <img src="images/posts/post1.jpg" alt="NCPD">
+                                        <div class="news-article-overlay">
+                                            <div class="news-article-category crime">Crime</div>
+                                            <h3 class="news-article-title">NCPD Corruption Scandal: Officers Caught Selling Evidence to Scavengers</h3>
+                                            <div class="news-article-meta">
+                                                <div class="news-article-source">Independent Observer</div>
+                                                <div class="news-article-date">2020-06-12</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="news-article-body">
+                                        <div class="news-article-summary">
+                                            An internal investigation has revealed that several NCPD officers were selling confiscated cyberware to the notorious Scavenger gang, raising serious questions about police corruption in Night City.
+                                        </div>
+                                        <div class="news-article-content">
+                                            <p>NIGHT CITY - In a shocking development that has rocked the already-controversial Night City Police Department, five officers from the Watson precinct have been arrested for allegedly selling confiscated cyberware to members of the Scavenger gang.</p>
+                                            <p>The internal affairs investigation, which has been ongoing for six months, uncovered evidence that the officers had been systematically diverting high-end cyberware from evidence lockup and selling it to the Scavengers, who are known for harvesting cyberware from unwilling victims.</p>
+                                        </div>
+                                        <div class="news-article-footer">
+                                            <div class="news-article-tags">
+                                                <div class="news-article-tag">NCPD</div>
+                                                <div class="news-article-tag">Corruption</div>
+                                                <div class="news-article-tag">Scavengers</div>
+                                            </div>
+                                            <div class="news-article-actions">
+                                                <button class="news-article-action read-more" data-article="ncpd-corruption">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="news-sidebar">
+                                <!-- Gang Territory Map -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Gang Territory</h3>
+                                    <div class="trending-news-list">
+                                        <div class="trending-news-item">
+                                            <img src="images/posts/post2.jpg" alt="Gang Map" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Night City Gang Territory Map - Updated</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Interactive</div>
+                                                    <div>Updated Today</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Most Wanted -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">NCPD Most Wanted</h3>
+                                    <div class="trending-news-list">
+                                        <div class="trending-news-item">
+                                            <img src="images/profiles/profile3.jpg" alt="Criminal" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Morgan Blackhand - ¥1,000,000 Reward</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Solo</div>
+                                                    <div>Terrorism</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <img src="images/profiles/profile5.jpg" alt="Criminal" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Johnny Silverhand - ¥750,000 Reward</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Rockerboy</div>
+                                                    <div>Terrorism</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <img src="images/profiles/profile2.jpg" alt="Criminal" class="trending-news-image">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Spider Murphy - ¥500,000 Reward</div>
+                                                <div class="trending-news-meta">
+                                                    <div>Netrunner</div>
+                                                    <div>Cyber Crimes</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Advertisement -->
+                                <div class="advertisement">
+                                    <img src="images/posts/post3.jpg" alt="Advertisement">
+                                </div>
+                                
+                                <!-- Crime Statistics -->
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Crime Statistics</h3>
+                                    <div class="trending-news-list">
+                                        <div class="trending-news-item">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Homicides: 247 (Last 7 Days)</div>
+                                                <div class="trending-news-meta">
+                                                    <div>+12% from previous week</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Cyberware Theft: 583 Cases</div>
+                                                <div class="trending-news-meta">
+                                                    <div>+28% from previous week</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="trending-news-item">
+                                            <div class="trending-news-content">
+                                                <div class="trending-news-title">Cyberpsycho Incidents: 18</div>
+                                                <div class="trending-news-meta">
+                                                    <div>+5% from previous week</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Technology Section -->
+                    <div class="news-section tech-section">
+                        <!-- Technology content here -->
+                    </div>
+                    
+                    <!-- Entertainment Section -->
+                    <div class="news-section entertainment-section">
+                        <!-- Entertainment content here -->
+                    </div>
+                    
+                    <!-- Classified Ads Section -->
+                    <div class="news-section classified-section">
+                        <div class="news-content">
+                            <div class="news-main">
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Jobs & Gigs</h3>
+                                    <div class="classified-ads">
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Experienced Solo Needed for High-Risk Extraction</div>
+                                            <div class="classified-ad-content">Looking for combat-experienced solo with own gear for corporate extraction job. High risk, high reward. Must have verifiable street cred and references.</div>
+                                            <div class="classified-ad-contact">Contact: Fixer-T at Afterlife Bar (Ask for T)</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Netrunner Required for Data Mining Operation</div>
+                                            <div class="classified-ad-content">Skilled netrunner needed for complex data extraction. Must have experience with corporate ICE and custom daemons. Clean record preferred but not required.</div>
+                                            <div class="classified-ad-contact">Contact: data_miner@secure.nc</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Trauma Team Seeking Combat Medics</div>
+                                            <div class="classified-ad-content">Trauma Team International is recruiting combat medics with field experience. Military background preferred. Must be willing to work under extreme conditions. Full corporate benefits package.</div>
+                                            <div class="classified-ad-contact">Contact: careers.traumateam.corp</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Discreet Courier Needed for Package Delivery</div>
+                                            <div class="classified-ad-content">Need reliable courier for sensitive package delivery across Night City. Must have own transportation and clean record with NCPD. No questions asked, no package inspection.</div>
+                                            <div class="classified-ad-contact">Contact: Box #4587 at Watson Mail Center</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Services</h3>
+                                    <div class="classified-ads">
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Ripperdoc - Discount Cyberware Installation</div>
+                                            <div class="classified-ad-content">Licensed ripperdoc offering quality cyberware installation at competitive rates. Military-grade options available for the right clients. Watson district location, clean facility.</div>
+                                            <div class="classified-ad-contact">Contact: Doc Viktor at 555-0187</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Braindance Editing & Custom Experiences</div>
+                                            <div class="classified-ad-content">Professional BD editor offering custom experiences and editing services. From entertainment to training simulations. All work confidential and untraceable.</div>
+                                            <div class="classified-ad-contact">Contact: bd_master@jig.nc</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Digital Identity Scrubbing</div>
+                                            <div class="classified-ad-content">Complete digital footprint removal and identity scrubbing. Corporate records, NCPD databases, NET presence - all gone. 100% success rate. Premium service, premium price.</div>
+                                            <div class="classified-ad-contact">Contact: [ENCRYPTED] - Leave message at dead drop #7, Kabuki Market</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">For Sale</h3>
+                                    <div class="classified-ads">
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Military-Grade Weapons - No Questions Asked</div>
+                                            <div class="classified-ad-content">Premium selection of hard-to-find firearms and combat gear. Militech, Arasaka, and Tsunami Defense Systems inventory available. Cash only, no serial numbers.</div>
+                                            <div class="classified-ad-contact">Contact: Wilson at 2nd Amendment, Arroyo</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Rare Cyberware Components - Collector's Items</div>
+                                            <div class="classified-ad-content">Vintage and rare cyberware components from pre-2020 manufacturers. Perfect for collectors or custom builds. Some military prototype pieces available for serious buyers.</div>
+                                            <div class="classified-ad-contact">Contact: cyber_collector@secure.nc</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">2067 Rayfield Caliburn - Low Mileage</div>
+                                            <div class="classified-ad-content">Pristine condition Rayfield Caliburn, matte black with custom red interior. Bulletproof glass, reinforced chassis, nitrous system. Only 5,000 km. Serious inquiries only.</div>
+                                            <div class="classified-ad-contact">Contact: luxury_rides@nc.net</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="news-sidebar">
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Housing</h3>
+                                    <div class="classified-ads">
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Luxury Apartment - North Oak</div>
+                                            <div class="classified-ad-content">Exclusive penthouse in North Oak with panoramic city views. 300 sq.m, 3 bedrooms, private elevator, secure parking. Full smart home system and security package.</div>
+                                            <div class="classified-ad-contact">Contact: Westbrook Realty at 555-9876</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Megabuilding Apartment - Watson</div>
+                                            <div class="classified-ad-content">Affordable unit in Megabuilding H10. Recently renovated, secure door, working utilities. Close to fast travel point and market. No questions asked about occupants.</div>
+                                            <div class="classified-ad-contact">Contact: H10 Management at 555-4321</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="advertisement">
+                                    <img src="images/posts/post1.jpg" alt="Advertisement">
+                                </div>
+                                
+                                <div class="news-sidebar-section">
+                                    <h3 class="news-sidebar-title">Personal</h3>
+                                    <div class="classified-ads">
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Seeking Information on Missing Person</div>
+                                            <div class="classified-ad-content">Looking for information on Sandra Dorsett, last seen in Watson district on June 10. Reward offered for credible information leading to her whereabouts.</div>
+                                            <div class="classified-ad-contact">Contact: find.sandra@nc.net</div>
+                                        </div>
+                                        <div class="classified-ad">
+                                            <div class="classified-ad-title">Seeking Experienced Runner for Personal Vendetta</div>
+                                            <div class="classified-ad-content">Need skilled professional for personal matter involving Arasaka executive. High risk, excellent compensation. Discretion absolute necessity.</div>
+                                            <div class="classified-ad-contact">Contact: Drop point #23, Japantown</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="trending">
+                <h3 class="trending-header">Trending Topics</h3>
+                <div class="trending-item">
+                    <div class="trending-tag">#ArasakaWatch</div>
+                    <div class="trending-count">24.5K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#NightCityRiots</div>
+                    <div class="trending-count">18.3K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#ChromeKillers</div>
+                    <div class="trending-count">15.7K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#NetCrash2020</div>
+                    <div class="trending-count">12.9K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#SoulkillerVirus</div>
+                    <div class="trending-count">10.2K mentions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Full Article View - Arasaka Security -->
+    <div class="full-article" id="arasaka-security-article">
+        <div class="full-article-container">
+            <button class="full-article-close">×</button>
+            <div class="full-article-header">
+                <img src="images/posts/post1.jpg" alt="Arasaka Tower">
+                <div class="full-article-overlay">
+                    <div class="full-article-category corporate">Corporate</div>
+                    <h2 class="full-article-title">Arasaka Unveils New Security Division Amid Rising Corporate Tensions</h2>
+                    <div class="full-article-meta">
+                        <div class="full-article-source">N54 News</div>
+                        <div class="full-article-date">2020-06-15</div>
+                    </div>
+                </div>
+            </div>
+            <div class="full-article-body">
+                <div class="full-article-content">
+                    <p>NIGHT CITY - In a move that analysts are calling a significant escalation in corporate hostilities, Arasaka Corporation has unveiled its new "Sentinel Division," a specialized security force dedicated to counter-intelligence and anti-corporate espionage operations.</p>
+                    
+                    <p>The announcement comes just weeks after a series of high-profile data breaches at Militech facilities across Night City, though Arasaka representatives deny any connection between the two events.</p>
+                    
+                    <p>"The Sentinel Division represents Arasaka's commitment to providing our clients with the most advanced security solutions in an increasingly hostile corporate landscape," said Taki Iwasaki, Arasaka's Chief of Security Operations, during a press conference at Arasaka Tower yesterday. "Our proprietary blend of cutting-edge technology and elite personnel training will set a new standard for corporate security."</p>
+                    
+                    <div class="full-article-quote">
+                        "This is nothing less than a declaration of war. Arasaka is building an army, not a security division." - Anonymous Militech executive
+                    </div>
+                    
+                    <p>According to the official press release, the Sentinel Division will employ over 5,000 specially trained operatives and feature a range of new security technologies, including advanced surveillance systems, counter-netrunner measures, and what Arasaka describes as "proactive threat neutralization capabilities."</p>
+                    
+                    <p>Corporate security analysts suggest that the formation of the Sentinel Division may be in response to not only the recent Militech breaches but also to the growing threat posed by smaller corporations and independent operators in the corporate espionage field.</p>
+                    
+                    <p>"What we're seeing is the next evolution of corporate warfare," said Dr. Elena Novak, professor of Corporate Politics at Night City University. "As direct military confrontation becomes increasingly costly and public, corporations are shifting to more subtle forms of conflict. Arasaka's new division signals a significant investment in this shadow war."</p>
+                    
+                    <p>Militech Corporation has not officially responded to the announcement, but sources within the company express concern about what they view as a provocative move by their chief rival.</p>
+                    
+                    <p>"This is nothing less than a declaration of war," said one Militech executive who requested anonymity. "Arasaka is building an army, not a security division. The capabilities they're describing go far beyond defensive measures."</p>
+                    
+                    <p>The announcement has already had economic repercussions, with Arasaka's stock rising 3.2% following the press conference, while Militech shares fell 1.8%. Several smaller security firms also saw their stock prices drop as investors anticipate Arasaka capturing a larger share of the corporate security market.</p>
+                    
+                    <p>Night City officials have not commented on the development, though NCPD sources indicate that they are monitoring the situation closely, particularly given the potential for increased corporate activity within city limits.</p>
+                    
+                    <p>The Sentinel Division is expected to be fully operational by the end of the month, with Arasaka already accepting contracts from other corporations seeking to enhance their security posture.</p>
+                </div>
+                <div class="full-article-footer">
+                    <div class="full-article-tags">
+                        <div class="full-article-tag">Arasaka</div>
+                        <div class="full-article-tag">Corporate War</div>
+                        <div class="full-article-tag">Security</div>
+                        <div class="full-article-tag">Militech</div>
+                    </div>
+                    <div class="full-article-actions">
+                        <button class="full-article-action">Share</button>
+                        <button class="full-article-action">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Full Article View - Maelstrom Expansion -->
+    <div class="full-article" id="maelstrom-expansion-article">
+        <div class="full-article-container">
+            <button class="full-article-close">×</button>
+            <div class="full-article-header">
+                <img src="images/posts/post2.jpg" alt="Gang Violence">
+                <div class="full-article-overlay">
+                    <div class="full-article-category crime">Crime</div>
+                    <h2 class="full-article-title">Maelstrom Gang Territory Expands Following Bloody Clash with Tyger Claws</h2>
+                    <div class="full-article-meta">
+                        <div class="full-article-source">NC Street Press</div>
+                        <div class="full-article-date">2020-06-14</div>
+                    </div>
+                </div>
+            </div>
+            <div class="full-article-body">
+                <div class="full-article-content">
+                    <p>WATSON DISTRICT - In what locals are describing as "a war zone," Maelstrom gang members have successfully pushed Tyger Claws out of a significant portion of northern Watson, expanding their territory and control over local black market operations.</p>
+                    
+                    <p>NCPD reports indicate at least 27 confirmed casualties, though sources on the ground suggest the actual death toll may be significantly higher. The conflict reportedly erupted over control of a valuable black market cyberware operation previously run by the Tyger Claws.</p>
+                    
+                    <p>"It was like something out of a war movie," said Jin Park, owner of a noodle shop on the edge of the contested territory. "Maelstrom came in with military-grade weapons, full chrome, like an army of machines. The Tyger Claws fought back hard, but they were outgunned."</p>
+                    
+                    <p>The fighting, which began late Tuesday night and continued through early Wednesday morning, centered around the All Foods plant and surrounding blocks, an area that has been under Tyger Claws control for nearly five years. By dawn, Maelstrom forces had secured the plant and pushed Tyger Claws fighters back to Kabuki Market.</p>
+                    
+                    <div class="full-article-quote">
+                        "Maelstrom came in with military-grade weapons, full chrome, like an army of machines. The Tyger Claws fought back hard, but they were outgunned." - Jin Park, local business owner
+                    </div>
+                    
+                    <p>NCPD MaxTac units were deployed to contain the violence but reportedly arrived only after the main fighting had concluded. Critics are questioning the delayed response, with some local residents suggesting that corporate interests may have influenced police priorities.</p>
+                    
+                    <p>"They show up in minutes when there's trouble at Arasaka Tower, but when our neighborhood is being shot up? They take their sweet time," said Watson resident Maria Gonzalez.</p>
+                    
+                    <p>NCPD Deputy Commissioner Thomas Chen defended the police response, citing "multiple simultaneous incidents" that stretched department resources thin. "Our officers responded as quickly as circumstances allowed," Chen stated at a press briefing.</p>
+                    
+                    <p>The territorial shift represents one of the most significant changes to Night City's gang landscape in recent years. Maelstrom, known for their extreme cybernetic modifications and volatile behavior, now control a substantially larger portion of Watson, including several black market operations previously run by the Tyger Claws.</p>
+                    
+                    <p>Sources familiar with the gang's operations suggest that Maelstrom's interest in the All Foods plant may be related to rumors of military-grade cyberware being stored there, possibly from a hijacked Militech shipment.</p>
+                    
+                    <p>"This wasn't just about territory," said an anonymous source with connections to both gangs. "Maelstrom got intel about something big in that plant. Something worth going to war over."</p>
+                    
+                    <p>Local businesses are now faced with the prospect of negotiating new "protection" arrangements with Maelstrom, a gang known for its unpredictability and extreme violence.</p>
+                    
+                    <p>"With Tyger Claws, there were rules, an understanding," said Park. "With Maelstrom... who knows? Some of them barely seem human anymore."</p>
+                    
+                    <p>Tyger Claws leadership has not made any public statements regarding the territorial loss, but sources within the gang indicate that they are planning retaliation. The NCPD has increased patrols in the area in anticipation of further violence.</p>
+                </div>
+                <div class="full-article-footer">
+                    <div class="full-article-tags">
+                        <div class="full-article-tag">Maelstrom</div>
+                        <div class="full-article-tag">Tyger Claws</div>
+                        <div class="full-article-tag">Gang War</div>
+                        <div class="full-article-tag">Watson</div>
+                    </div>
+                    <div class="full-article-actions">
+                        <button class="full-article-action">Share</button>
+                        <button class="full-article-action">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // News tab switching
+            const newsTabs = document.querySelectorAll('.news-tab');
+            newsTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Update active tab
+                    newsTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding section
+                    const tabName = this.getAttribute('data-tab');
+                    document.querySelectorAll('.news-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.querySelector(`.${tabName}-section`).classList.add('active');
+                });
+            });
+            
+            // Read More button functionality
+            const readMoreButtons = document.querySelectorAll('.read-more');
+            readMoreButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const articleId = this.getAttribute('data-article');
+                    document.getElementById(`${articleId}-article`).classList.add('active');
+                });
+            });
+            
+            // Close full article
+            const closeButtons = document.querySelectorAll('.full-article-close');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.full-article').classList.remove('active');
+                });
+            });
+            
+            // Close full article when clicking outside
+            document.querySelectorAll('.full-article').forEach(article => {
+                article.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

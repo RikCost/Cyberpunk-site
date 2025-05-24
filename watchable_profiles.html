@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetLink - Watchable Profiles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Watchable Profiles Specific Styles */
+        .watchlist-container {
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+        
+        .watchlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+        
+        .watchlist-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .watchlist-title::before {
+            content: "//";
+            color: var(--accent-color);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .watchlist-controls {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .watchlist-filter {
+            background-color: rgba(10, 10, 18, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 8px 15px;
+            color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+        }
+        
+        .watchlist-filter:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        
+        .watchlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .profile-card-mini {
+            background-color: rgba(10, 10, 18, 0.7);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 5px;
+            overflow: hidden;
+            transition: all 0.3s;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .profile-card-mini:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: var(--neon-pink);
+        }
+        
+        .profile-card-mini::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--neon-blue), var(--neon-pink));
+        }
+        
+        .profile-card-mini.high-threat::before {
+            background: linear-gradient(to right, var(--neon-pink), #ff0000);
+        }
+        
+        .profile-card-mini.medium-threat::before {
+            background: linear-gradient(to right, var(--neon-yellow), var(--neon-pink));
+        }
+        
+        .profile-card-mini.low-threat::before {
+            background: linear-gradient(to right, var(--neon-blue), var(--neon-yellow));
+        }
+        
+        .profile-card-header {
+            position: relative;
+            height: 100px;
+            overflow: hidden;
+        }
+        
+        .profile-card-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(30%) contrast(120%);
+            transition: all 0.3s;
+        }
+        
+        .profile-card-mini:hover .profile-card-header img {
+            filter: grayscale(0%) contrast(110%);
+            transform: scale(1.05);
+        }
+        
+        .profile-card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(10, 10, 18, 0.2), rgba(10, 10, 18, 0.8));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 15px;
+        }
+        
+        .profile-card-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .profile-card-handle {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+        
+        .profile-card-body {
+            padding: 15px;
+        }
+        
+        .profile-card-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .profile-card-stat {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .profile-card-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        .profile-card-stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .profile-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .profile-card-tag {
+            background-color: rgba(0, 243, 255, 0.1);
+            color: var(--accent-color);
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .profile-card-tag.role {
+            background-color: rgba(255, 0, 160, 0.1);
+            color: var(--neon-pink);
+        }
+        
+        .profile-card-tag.faction {
+            background-color: rgba(255, 255, 0, 0.1);
+            color: var(--neon-yellow);
+        }
+        
+        .profile-detail {
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 5px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            display: none;
+        }
+        
+        .profile-detail.active {
+            display: block;
+        }
+        
+        .profile-detail::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--neon-blue), var(--neon-pink));
+        }
+        
+        .profile-detail.high-threat::before {
+            background: linear-gradient(to bottom, var(--neon-pink), #ff0000);
+        }
+        
+        .profile-detail.medium-threat::before {
+            background: linear-gradient(to bottom, var(--neon-yellow), var(--neon-pink));
+        }
+        
+        .profile-detail.low-threat::before {
+            background: linear-gradient(to bottom, var(--neon-blue), var(--neon-yellow));
+        }
+        
+        .profile-detail-header {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .profile-detail-back {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: none;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .profile-detail-back:hover {
+            background-color: var(--accent-color);
+            color: var(--darker-bg);
+        }
+        
+        .profile-detail-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 5px;
+            border: 2px solid var(--accent-color);
+            object-fit: cover;
+            margin-right: 30px;
+        }
+        
+        .profile-detail-info {
+            flex: 1;
+        }
+        
+        .profile-detail-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .profile-detail-handle {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 16px;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+        
+        .profile-detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .profile-detail-tag {
+            background-color: rgba(0, 243, 255, 0.1);
+            color: var(--accent-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .profile-detail-tag.role {
+            background-color: rgba(255, 0, 160, 0.1);
+            color: var(--neon-pink);
+        }
+        
+        .profile-detail-tag.faction {
+            background-color: rgba(255, 255, 0, 0.1);
+            color: var(--neon-yellow);
+        }
+        
+        .profile-detail-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .profile-detail-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .profile-detail-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        .profile-detail-stat-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .profile-detail-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        
+        .profile-detail-section {
+            margin-bottom: 30px;
+        }
+        
+        .profile-detail-section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--neon-pink);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .profile-detail-section-title::before {
+            content: "//";
+            color: var(--accent-color);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .profile-detail-text {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .profile-detail-text p {
+            margin-bottom: 15px;
+        }
+        
+        .profile-detail-sidebar {
+            background-color: rgba(10, 10, 18, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 20px;
+        }
+        
+        .profile-detail-data-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .profile-detail-data-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .profile-detail-data-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--neon-pink);
+            margin-bottom: 5px;
+        }
+        
+        .profile-detail-data-value {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+        }
+        
+        .profile-detail-threat {
+            margin-top: 30px;
+        }
+        
+        .profile-detail-threat-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--neon-pink);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .profile-detail-threat-meter {
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        
+        .profile-detail-threat-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--neon-blue), var(--neon-pink));
+        }
+        
+        .profile-detail-threat-fill.high {
+            background: linear-gradient(to right, var(--neon-pink), #ff0000);
+            width: 90%;
+        }
+        
+        .profile-detail-threat-fill.medium {
+            background: linear-gradient(to right, var(--neon-yellow), var(--neon-pink));
+            width: 60%;
+        }
+        
+        .profile-detail-threat-fill.low {
+            background: linear-gradient(to right, var(--neon-blue), var(--neon-yellow));
+            width: 30%;
+        }
+        
+        .profile-detail-threat-value {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            color: var(--accent-color);
+            text-align: right;
+        }
+        
+        .profile-detail-cyberware {
+            margin-top: 30px;
+        }
+        
+        .cyberware-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .cyberware-item {
+            background-color: rgba(10, 10, 18, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+        
+        .cyberware-item:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+        
+        .cyberware-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .cyberware-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .cyberware-type {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-color);
+            font-size: 14px;
+        }
+        
+        .cyberware-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+        
+        .cyberware-stats {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .cyberware-stat {
+            font-size: 12px;
+            color: var(--neon-pink);
+        }
+        
+        .classified-overlay {
+            position: relative;
+        }
+        
+        .classified-overlay::after {
+            content: 'CLASSIFIED';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            color: rgba(255, 0, 0, 0.5);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            border: 3px solid rgba(255, 0, 0, 0.5);
+            padding: 5px 15px;
+            pointer-events: none;
+        }
+        
+        .redacted {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: transparent;
+            border-radius: 3px;
+            user-select: none;
+            position: relative;
+        }
+        
+        .redacted::selection {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: transparent;
+        }
+        
+        .glitch-text {
+            position: relative;
+            display: inline-block;
+            color: var(--accent-color);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+        
+        .glitch-text::before {
+            color: var(--neon-pink);
+            z-index: -1;
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+        
+        .glitch-text::after {
+            color: var(--neon-blue);
+            z-index: -2;
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-anim-1 {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+        
+        @keyframes glitch-anim-2 {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(2px, 0); }
+            50% { transform: translate(-2px, 1px); }
+            75% { transform: translate(1px, -1px); }
+        }
+        
+        .last-seen {
+            margin-top: 20px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            color: var(--neon-yellow);
+        }
+        
+        .last-seen-date {
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .associates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .associate-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: rgba(10, 10, 18, 0.3);
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .associate-item:hover {
+            background-color: rgba(10, 10, 18, 0.5);
+        }
+        
+        .associate-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .associate-info {
+            flex: 1;
+        }
+        
+        .associate-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .associate-relation {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .associate-status {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        
+        .associate-status.ally {
+            background-color: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+        }
+        
+        .associate-status.enemy {
+            background-color: rgba(255, 0, 0, 0.1);
+            color: #ff0000;
+        }
+        
+        .associate-status.neutral {
+            background-color: rgba(255, 255, 0, 0.1);
+            color: #ffff00;
+        }
+        
+        .security-notice {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            color: #ff0000;
+            text-align: center;
+            margin-top: 30px;
+            padding: 10px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 5px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-line"></div>
+    
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">NET<span>LINK</span></div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="news.html">News</a></li>
+                        <li><a href="watchable_profiles.html" class="active">Profiles</a></li>
+                        <li><a href="messages.html">Messages</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="main-content">
+            <div class="profile-card neon-border">
+                <div class="profile-header">
+                    <img src="images/profiles/profile1.jpg" alt="Profile Picture" class="profile-pic">
+                    <div class="profile-info">
+                        <div class="profile-name">V</div>
+                        <div class="profile-handle">@v_merc</div>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">142</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">87</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">85</div>
+                        <div class="stat-label">Street Cred</div>
+                    </div>
+                </div>
+                
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Role</div>
+                        <div class="detail-value">Solo</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Faction</div>
+                        <div class="detail-value">Afterlife</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Style</div>
+                        <div class="detail-value">Streetkid</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feed">
+                <div class="watchlist-container">
+                    <div class="watchlist-header">
+                        <h2 class="watchlist-title">Watchable Profiles</h2>
+                        <div class="watchlist-controls">
+                            <select class="watchlist-filter">
+                                <option value="all">All Profiles</option>
+                                <option value="solo">Solos</option>
+                                <option value="netrunner">Netrunners</option>
+                                <option value="fixer">Fixers</option>
+                                <option value="rockerboy">Rockerboys</option>
+                                <option value="corporate">Corporates</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="watchlist-grid">
+                        <!-- Spider Murphy - Netrunner -->
+                        <div class="profile-card-mini medium-threat" data-profile="spider-murphy">
+                            <div class="profile-card-header">
+                                <img src="images/profiles/profile2.jpg" alt="Spider Murphy">
+                                <div class="profile-card-overlay">
+                                    <div class="profile-card-name">Spider Murphy</div>
+                                    <div class="profile-card-handle">@spider_net</div>
+                                </div>
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="profile-card-stats">
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">92</div>
+                                        <div class="profile-card-stat-label">Net Rep</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">76</div>
+                                        <div class="profile-card-stat-label">Street Cred</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">M</div>
+                                        <div class="profile-card-stat-label">Threat</div>
+                                    </div>
+                                </div>
+                                <div class="profile-card-tags">
+                                    <div class="profile-card-tag role">Netrunner</div>
+                                    <div class="profile-card-tag faction">Nomad</div>
+                                    <div class="profile-card-tag">ICE Breaker</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Morgan Blackhand - Solo -->
+                        <div class="profile-card-mini high-threat" data-profile="morgan-blackhand">
+                            <div class="profile-card-header">
+                                <img src="images/profiles/profile3.jpg" alt="Morgan Blackhand">
+                                <div class="profile-card-overlay">
+                                    <div class="profile-card-name">Morgan Blackhand</div>
+                                    <div class="profile-card-handle">@blackhand</div>
+                                </div>
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="profile-card-stats">
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">98</div>
+                                        <div class="profile-card-stat-label">Combat</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">95</div>
+                                        <div class="profile-card-stat-label">Street Cred</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">H</div>
+                                        <div class="profile-card-stat-label">Threat</div>
+                                    </div>
+                                </div>
+                                <div class="profile-card-tags">
+                                    <div class="profile-card-tag role">Solo</div>
+                                    <div class="profile-card-tag faction">Independent</div>
+                                    <div class="profile-card-tag">Legend</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Rogue Amendiares - Fixer -->
+                        <div class="profile-card-mini medium-threat" data-profile="rogue-amendiares">
+                            <div class="profile-card-header">
+                                <img src="images/profiles/profile4.jpg" alt="Rogue Amendiares">
+                                <div class="profile-card-overlay">
+                                    <div class="profile-card-name">Rogue Amendiares</div>
+                                    <div class="profile-card-handle">@rogue_fixer</div>
+                                </div>
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="profile-card-stats">
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">88</div>
+                                        <div class="profile-card-stat-label">Contacts</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">90</div>
+                                        <div class="profile-card-stat-label">Street Cred</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">M</div>
+                                        <div class="profile-card-stat-label">Threat</div>
+                                    </div>
+                                </div>
+                                <div class="profile-card-tags">
+                                    <div class="profile-card-tag role">Fixer</div>
+                                    <div class="profile-card-tag faction">Afterlife</div>
+                                    <div class="profile-card-tag">Connected</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Johnny Silverhand - Rockerboy -->
+                        <div class="profile-card-mini high-threat" data-profile="johnny-silverhand">
+                            <div class="profile-card-header">
+                                <img src="images/profiles/profile5.jpg" alt="Johnny Silverhand">
+                                <div class="profile-card-overlay">
+                                    <div class="profile-card-name">Johnny Silverhand</div>
+                                    <div class="profile-card-handle">@silverhand_rebel</div>
+                                </div>
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="profile-card-stats">
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">95</div>
+                                        <div class="profile-card-stat-label">Charisma</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">93</div>
+                                        <div class="profile-card-stat-label">Street Cred</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">H</div>
+                                        <div class="profile-card-stat-label">Threat</div>
+                                    </div>
+                                </div>
+                                <div class="profile-card-tags">
+                                    <div class="profile-card-tag role">Rockerboy</div>
+                                    <div class="profile-card-tag faction">Samurai</div>
+                                    <div class="profile-card-tag">Anti-Corp</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Saburo Arasaka - Corporate -->
+                        <div class="profile-card-mini high-threat" data-profile="saburo-arasaka">
+                            <div class="profile-card-header">
+                                <img src="images/profiles/profile1.jpg" alt="Saburo Arasaka">
+                                <div class="profile-card-overlay">
+                                    <div class="profile-card-name">Saburo Arasaka</div>
+                                    <div class="profile-card-handle">@arasaka_ceo</div>
+                                </div>
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="profile-card-stats">
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">99</div>
+                                        <div class="profile-card-stat-label">Resources</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">97</div>
+                                        <div class="profile-card-stat-label">Influence</div>
+                                    </div>
+                                    <div class="profile-card-stat">
+                                        <div class="profile-card-stat-value">H</div>
+                                        <div class="profile-card-stat-label">Threat</div>
+                                    </div>
+                                </div>
+                                <div class="profile-card-tags">
+                                    <div class="profile-card-tag role">Corporate</div>
+                                    <div class="profile-card-tag faction">Arasaka</div>
+                                    <div class="profile-card-tag">CEO</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Spider Murphy Profile Detail -->
+                    <div class="profile-detail medium-threat" id="spider-murphy-detail">
+                        <button class="profile-detail-back">Return to Watchlist</button>
+                        <div class="profile-detail-header">
+                            <img src="images/profiles/profile2.jpg" alt="Spider Murphy" class="profile-detail-avatar">
+                            <div class="profile-detail-info">
+                                <h2 class="profile-detail-name">Spider Murphy</h2>
+                                <div class="profile-detail-handle">@spider_net</div>
+                                <div class="profile-detail-tags">
+                                    <div class="profile-detail-tag role">Netrunner</div>
+                                    <div class="profile-detail-tag faction">Nomad</div>
+                                    <div class="profile-detail-tag">ICE Breaker</div>
+                                    <div class="profile-detail-tag">Data Thief</div>
+                                </div>
+                                <div class="profile-detail-stats">
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">92</div>
+                                        <div class="profile-detail-stat-label">Net Rep</div>
+                                    </div>
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">76</div>
+                                        <div class="profile-detail-stat-label">Street Cred</div>
+                                    </div>
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">68</div>
+                                        <div class="profile-detail-stat-label">Combat</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-detail-content">
+                            <div class="profile-detail-main">
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Background</h3>
+                                    <div class="profile-detail-text">
+                                        <p>One of Night City's most skilled netrunners, Spider Murphy made her name breaking through corporate ICE that others considered impenetrable. Originally from a nomad family, she left the clan to pursue her talents in the urban jungle, quickly establishing herself as a force to be reckoned with in the Net.</p>
+                                        <p>Murphy gained notoriety after the DataKrash of 2020, where she was one of the few runners who managed to extract critical data during the collapse. Her ability to navigate black ICE and create custom intrusion programs has made her both a valuable ally and a dangerous enemy.</p>
+                                        <p>Currently believed to be working with various anti-corporate groups, providing access to secure systems and extracting sensitive information. Has been linked to several major data breaches at Arasaka and Militech facilities, though concrete evidence remains elusive.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Known Associates</h3>
+                                    <div class="associates-list">
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile3.jpg" alt="Morgan Blackhand" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Morgan Blackhand</div>
+                                                <div class="associate-relation">Frequent collaborator on high-risk operations</div>
+                                            </div>
+                                            <div class="associate-status ally">Ally</div>
+                                        </div>
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile5.jpg" alt="Johnny Silverhand" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Johnny Silverhand</div>
+                                                <div class="associate-relation">Provided netrunning support for anti-Arasaka operations</div>
+                                            </div>
+                                            <div class="associate-status ally">Ally</div>
+                                        </div>
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile1.jpg" alt="Saburo Arasaka" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Saburo Arasaka</div>
+                                                <div class="associate-relation">Target of multiple data extraction operations</div>
+                                            </div>
+                                            <div class="associate-status enemy">Enemy</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Cyberware</h3>
+                                    <div class="cyberware-list">
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Militech Neurolink Mk.IV</div>
+                                                <div class="cyberware-type">Neural Interface</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Military-grade neural interface with enhanced data processing capabilities and direct neural connection. Allows for rapid information transfer and multi-threaded operations in the Net.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Processing: +35%</div>
+                                                <div class="cyberware-stat">Interface Speed: 1.2 TB/s</div>
+                                                <div class="cyberware-stat">Encryption: Military</div>
+                                            </div>
+                                        </div>
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Zetatech Memory Expansion</div>
+                                                <div class="cyberware-type">Cortex Enhancement</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Expanded neural storage capacity with enhanced recall and processing. Allows for storage of multiple custom intrusion programs and ICE-breaking algorithms.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Storage: 8 PB</div>
+                                                <div class="cyberware-stat">Recall Speed: 800 MB/s</div>
+                                                <div class="cyberware-stat">Compression: 5:1</div>
+                                            </div>
+                                        </div>
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Kiroshi OpticScan</div>
+                                                <div class="cyberware-type">Ocular System</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Enhanced visual system with data overlay capabilities and pattern recognition software. Includes infrared and electromagnetic spectrum analysis.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Resolution: 16K</div>
+                                                <div class="cyberware-stat">Spectrum: Full EM</div>
+                                                <div class="cyberware-stat">Analysis: Real-time</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="profile-detail-sidebar">
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Real Name</div>
+                                    <div class="profile-detail-data-value">Murphy, <span class="redacted">Sarah Elizabeth</span></div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Age</div>
+                                    <div class="profile-detail-data-value">34</div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Origin</div>
+                                    <div class="profile-detail-data-value">Nomad (Snake Nation)</div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Current Residence</div>
+                                    <div class="profile-detail-data-value"><span class="redacted">Watson District, Block 4, Unit 718</span></div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Known Aliases</div>
+                                    <div class="profile-detail-data-value">
+                                        - Spider<br>
+                                        - The Web Weaver<br>
+                                        - <span class="redacted">BlackWidow</span><br>
+                                        - NetGhost
+                                    </div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Skills</div>
+                                    <div class="profile-detail-data-value">
+                                        - Netrunning (Expert)<br>
+                                        - Programming (Expert)<br>
+                                        - Electronics (Advanced)<br>
+                                        - Cryptography (Expert)<br>
+                                        - Small Arms (Intermediate)
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-threat">
+                                    <div class="profile-detail-threat-label">Threat Assessment</div>
+                                    <div class="profile-detail-threat-meter">
+                                        <div class="profile-detail-threat-fill medium"></div>
+                                    </div>
+                                    <div class="profile-detail-threat-value">MEDIUM (60/100)</div>
+                                </div>
+                                
+                                <div class="last-seen">
+                                    <div>LAST SEEN:</div>
+                                    <div class="last-seen-date">2020-06-12 :: NIGHT CITY :: WATSON DISTRICT</div>
+                                </div>
+                                
+                                <div class="security-notice">
+                                    SECURITY NOTICE: This profile is monitored by Arasaka Security Division. Unauthorized access will be traced and prosecuted.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Morgan Blackhand Profile Detail -->
+                    <div class="profile-detail high-threat" id="morgan-blackhand-detail">
+                        <button class="profile-detail-back">Return to Watchlist</button>
+                        <div class="profile-detail-header">
+                            <img src="images/profiles/profile3.jpg" alt="Morgan Blackhand" class="profile-detail-avatar">
+                            <div class="profile-detail-info">
+                                <h2 class="profile-detail-name">Morgan Blackhand</h2>
+                                <div class="profile-detail-handle">@blackhand</div>
+                                <div class="profile-detail-tags">
+                                    <div class="profile-detail-tag role">Solo</div>
+                                    <div class="profile-detail-tag faction">Independent</div>
+                                    <div class="profile-detail-tag">Legend</div>
+                                    <div class="profile-detail-tag">Mercenary</div>
+                                </div>
+                                <div class="profile-detail-stats">
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">98</div>
+                                        <div class="profile-detail-stat-label">Combat</div>
+                                    </div>
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">95</div>
+                                        <div class="profile-detail-stat-label">Street Cred</div>
+                                    </div>
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">90</div>
+                                        <div class="profile-detail-stat-label">Tactics</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-detail-content">
+                            <div class="profile-detail-main">
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Background</h3>
+                                    <div class="profile-detail-text">
+                                        <p>Morgan Blackhand is widely regarded as the most dangerous Solo in Night City, possibly the world. His reputation for tactical brilliance and combat expertise has made him a legend in mercenary circles. Unlike many Solos who rely on cyberware and brute force, Blackhand is known for his strategic mind and ability to outthink opponents.</p>
+                                        <p>Former military special forces operative who went private after the collapse of the United States. Has worked for various corporations and private clients, but maintains strict independence and a personal code that has earned him respect even among enemies.</p>
+                                        <p>Blackhand's involvement in the Fourth Corporate War, particularly his confrontations with Adam Smasher, have become legendary. Believed to have been severely injured during the Arasaka Tower bombing, but reports of his death have repeatedly proven premature.</p>
+                                        <p class="classified-overlay">Intelligence suggests Blackhand may be operating from the shadows, potentially gathering resources and allies for an unknown operation. Multiple high-profile mercenary contracts have been traced to shell companies potentially linked to his network.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Known Associates</h3>
+                                    <div class="associates-list">
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile2.jpg" alt="Spider Murphy" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Spider Murphy</div>
+                                                <div class="associate-relation">Frequent collaborator on high-risk operations</div>
+                                            </div>
+                                            <div class="associate-status ally">Ally</div>
+                                        </div>
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile5.jpg" alt="Johnny Silverhand" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Johnny Silverhand</div>
+                                                <div class="associate-relation">Former tactical partner, status complicated</div>
+                                            </div>
+                                            <div class="associate-status neutral">Neutral</div>
+                                        </div>
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile1.jpg" alt="Adam Smasher" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Adam Smasher</div>
+                                                <div class="associate-relation">Arch-nemesis, multiple deadly encounters</div>
+                                            </div>
+                                            <div class="associate-status enemy">Enemy</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Cyberware</h3>
+                                    <div class="cyberware-list">
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Militech Ballistic Co-Processor</div>
+                                                <div class="cyberware-type">Neural Combat System</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Military-grade neural processor that enhances combat reflexes and tactical analysis. Provides real-time ballistic calculations and threat assessment.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Reaction: +45%</div>
+                                                <div class="cyberware-stat">Accuracy: +38%</div>
+                                                <div class="cyberware-stat">Tactical Analysis: Real-time</div>
+                                            </div>
+                                        </div>
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Arasaka Reinforced Frame</div>
+                                                <div class="cyberware-type">Skeletal Enhancement</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Captured and modified Arasaka technology. Reinforced skeleton with carbon-titanium composite, providing enhanced strength and durability without full conversion.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Strength: +75%</div>
+                                                <div class="cyberware-stat">Durability: +80%</div>
+                                                <div class="cyberware-stat">Weight: +15kg</div>
+                                            </div>
+                                        </div>
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name"><span class="redacted">CLASSIFIED SYSTEM</span></div>
+                                                <div class="cyberware-type"><span class="redacted">CLASSIFIED TYPE</span></div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                <span class="redacted">Prototype system developed by [REDACTED]. Capabilities include [REDACTED] and [REDACTED]. System believed to be unique and experimental.</span>
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat"><span class="redacted">CLASSIFIED STAT</span></div>
+                                                <div class="cyberware-stat"><span class="redacted">CLASSIFIED STAT</span></div>
+                                                <div class="cyberware-stat"><span class="redacted">CLASSIFIED STAT</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="profile-detail-sidebar">
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Real Name</div>
+                                    <div class="profile-detail-data-value"><span class="redacted">CLASSIFIED</span></div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Age</div>
+                                    <div class="profile-detail-data-value">Approx. 50-55</div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Origin</div>
+                                    <div class="profile-detail-data-value"><span class="redacted">CLASSIFIED</span></div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Current Residence</div>
+                                    <div class="profile-detail-data-value"><span class="redacted">UNKNOWN</span></div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Known Aliases</div>
+                                    <div class="profile-detail-data-value">
+                                        - Blackhand<br>
+                                        - The Ghost<br>
+                                        - <span class="redacted">CLASSIFIED</span><br>
+                                        - The Tactician
+                                    </div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Skills</div>
+                                    <div class="profile-detail-data-value">
+                                        - Combat (Master)<br>
+                                        - Tactics (Master)<br>
+                                        - Weapons Tech (Expert)<br>
+                                        - Leadership (Expert)<br>
+                                        - Stealth (Expert)<br>
+                                        - <span class="redacted">CLASSIFIED</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-threat">
+                                    <div class="profile-detail-threat-label">Threat Assessment</div>
+                                    <div class="profile-detail-threat-meter">
+                                        <div class="profile-detail-threat-fill high"></div>
+                                    </div>
+                                    <div class="profile-detail-threat-value">HIGH (90/100)</div>
+                                </div>
+                                
+                                <div class="last-seen">
+                                    <div>LAST CONFIRMED SIGHTING:</div>
+                                    <div class="last-seen-date">2020-08-20 :: NIGHT CITY :: ARASAKA TOWER</div>
+                                </div>
+                                
+                                <div class="security-notice">
+                                    SECURITY NOTICE: EXTREME CAUTION ADVISED. DO NOT ENGAGE. REPORT ANY SIGHTINGS IMMEDIATELY TO SECURITY DIVISION.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Johnny Silverhand Profile Detail -->
+                    <div class="profile-detail high-threat" id="johnny-silverhand-detail">
+                        <button class="profile-detail-back">Return to Watchlist</button>
+                        <div class="profile-detail-header">
+                            <img src="images/profiles/profile5.jpg" alt="Johnny Silverhand" class="profile-detail-avatar">
+                            <div class="profile-detail-info">
+                                <h2 class="profile-detail-name">Johnny Silverhand</h2>
+                                <div class="profile-detail-handle">@silverhand_rebel</div>
+                                <div class="profile-detail-tags">
+                                    <div class="profile-detail-tag role">Rockerboy</div>
+                                    <div class="profile-detail-tag faction">Samurai</div>
+                                    <div class="profile-detail-tag">Anti-Corp</div>
+                                    <div class="profile-detail-tag">Terrorist</div>
+                                </div>
+                                <div class="profile-detail-stats">
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">95</div>
+                                        <div class="profile-detail-stat-label">Charisma</div>
+                                    </div>
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">93</div>
+                                        <div class="profile-detail-stat-label">Street Cred</div>
+                                    </div>
+                                    <div class="profile-detail-stat">
+                                        <div class="profile-detail-stat-value">82</div>
+                                        <div class="profile-detail-stat-label">Combat</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-detail-content">
+                            <div class="profile-detail-main">
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Background</h3>
+                                    <div class="profile-detail-text">
+                                        <p>Johnny Silverhand is one of Night City's most iconic figures - a legendary rockerboy, revolutionary, and anti-corporate terrorist. As the frontman of the chrome rock band Samurai, he used his music and influence to spread anti-corporate messages and incite rebellion against corporate control.</p>
+                                        <p>Born Robert John Linder, he served in the Central American Conflict where he lost his arm, later replaced with his signature silver prosthetic that earned him his stage name. After returning from war, he channeled his rage and disillusionment into music, quickly rising to fame with Samurai.</p>
+                                        <p>Silverhand's hatred for corporations, particularly Arasaka, intensified after the kidnapping and presumed death of his girlfriend Alt Cunningham, a brilliant netrunner who created the Soulkiller program. This led to his first attack on Arasaka Tower, which failed but cemented his status as a corporate enemy.</p>
+                                        <p>His final act of rebellion came during the Fourth Corporate War, where he participated in a raid on Arasaka Tower alongside Morgan Blackhand. <span class="redacted">Intelligence suggests Silverhand was killed during this operation, though his body was never recovered. Recent unconfirmed reports indicate possible engram preservation of his consciousness.</span></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Known Associates</h3>
+                                    <div class="associates-list">
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile2.jpg" alt="Spider Murphy" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Spider Murphy</div>
+                                                <div class="associate-relation">Provided netrunning support for anti-Arasaka operations</div>
+                                            </div>
+                                            <div class="associate-status ally">Ally</div>
+                                        </div>
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile3.jpg" alt="Morgan Blackhand" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Morgan Blackhand</div>
+                                                <div class="associate-relation">Tactical partner in Arasaka Tower raid</div>
+                                            </div>
+                                            <div class="associate-status ally">Ally</div>
+                                        </div>
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile4.jpg" alt="Rogue Amendiares" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Rogue Amendiares</div>
+                                                <div class="associate-relation">Former lover and operational partner</div>
+                                            </div>
+                                            <div class="associate-status ally">Ally</div>
+                                        </div>
+                                        <div class="associate-item">
+                                            <img src="images/profiles/profile1.jpg" alt="Saburo Arasaka" class="associate-avatar">
+                                            <div class="associate-info">
+                                                <div class="associate-name">Saburo Arasaka</div>
+                                                <div class="associate-relation">Primary target and sworn enemy</div>
+                                            </div>
+                                            <div class="associate-status enemy">Enemy</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-section">
+                                    <h3 class="profile-detail-section-title">Cyberware</h3>
+                                    <div class="cyberware-list">
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Militech "Silver Hand" Mk.II</div>
+                                                <div class="cyberware-type">Cybernetic Arm</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Iconic silver cybernetic arm with enhanced strength and dexterity. Custom-modified for guitar playing with specialized neural interface for perfect musical articulation.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Strength: +70%</div>
+                                                <div class="cyberware-stat">Dexterity: +85%</div>
+                                                <div class="cyberware-stat">Musical Precision: +95%</div>
+                                            </div>
+                                        </div>
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Kiroshi Optics "Rockstar" Edition</div>
+                                                <div class="cyberware-type">Ocular System</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Enhanced visual system with anti-flash protection, low-light enhancement, and recording capabilities. Designed to function in concert environments and combat situations.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Light Adaptation: +90%</div>
+                                                <div class="cyberware-stat">Recording: 12K</div>
+                                                <div class="cyberware-stat">Targeting: +40%</div>
+                                            </div>
+                                        </div>
+                                        <div class="cyberware-item">
+                                            <div class="cyberware-header">
+                                                <div class="cyberware-name">Raven Microcyb Subdermal Armor</div>
+                                                <div class="cyberware-type">Defensive System</div>
+                                            </div>
+                                            <div class="cyberware-description">
+                                                Lightweight subdermal armor plating providing protection against small arms fire and melee weapons without restricting movement.
+                                            </div>
+                                            <div class="cyberware-stats">
+                                                <div class="cyberware-stat">Ballistic Protection: +45%</div>
+                                                <div class="cyberware-stat">Melee Protection: +50%</div>
+                                                <div class="cyberware-stat">Mobility Impact: -5%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="profile-detail-sidebar">
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Real Name</div>
+                                    <div class="profile-detail-data-value">Linder, Robert John</div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Age</div>
+                                    <div class="profile-detail-data-value">Approx. 35 (at time of disappearance)</div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Origin</div>
+                                    <div class="profile-detail-data-value">Texas, Former United States</div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Current Status</div>
+                                    <div class="profile-detail-data-value"><span class="glitch-text" data-text="UNKNOWN">UNKNOWN</span></div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Known Aliases</div>
+                                    <div class="profile-detail-data-value">
+                                        - Johnny Silverhand<br>
+                                        - The Chrome Rebel<br>
+                                        - Robert John Linder<br>
+                                        - The Rockerboy
+                                    </div>
+                                </div>
+                                <div class="profile-detail-data-item">
+                                    <div class="profile-detail-data-label">Skills</div>
+                                    <div class="profile-detail-data-value">
+                                        - Performance (Master)<br>
+                                        - Small Arms (Expert)<br>
+                                        - Persuasion (Master)<br>
+                                        - Composition (Expert)<br>
+                                        - Tactics (Advanced)
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-detail-threat">
+                                    <div class="profile-detail-threat-label">Threat Assessment</div>
+                                    <div class="profile-detail-threat-meter">
+                                        <div class="profile-detail-threat-fill high"></div>
+                                    </div>
+                                    <div class="profile-detail-threat-value">HIGH (85/100)</div>
+                                </div>
+                                
+                                <div class="last-seen">
+                                    <div>LAST CONFIRMED SIGHTING:</div>
+                                    <div class="last-seen-date">2020-08-20 :: NIGHT CITY :: ARASAKA TOWER</div>
+                                </div>
+                                
+                                <div class="security-notice">
+                                    SECURITY NOTICE: SUBJECT PRESUMED DECEASED. REPORT ANY INFORMATION REGARDING ENGRAM PRESERVATION OR CONSCIOUSNESS TRANSFER IMMEDIATELY.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="trending">
+                <h3 class="trending-header">Trending Topics</h3>
+                <div class="trending-item">
+                    <div class="trending-tag">#ArasakaWatch</div>
+                    <div class="trending-count">24.5K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#NightCityRiots</div>
+                    <div class="trending-count">18.3K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#ChromeKillers</div>
+                    <div class="trending-count">15.7K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#NetCrash2020</div>
+                    <div class="trending-count">12.9K mentions</div>
+                </div>
+                <div class="trending-item">
+                    <div class="trending-tag">#SoulkillerVirus</div>
+                    <div class="trending-count">10.2K mentions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Profile card click event
+            const profileCards = document.querySelectorAll('.profile-card-mini');
+            profileCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const profileId = this.getAttribute('data-profile');
+                    document.querySelectorAll('.profile-detail').forEach(detail => {
+                        detail.style.display = 'none';
+                    });
+                    document.getElementById(`${profileId}-detail`).style.display = 'block';
+                    document.querySelector('.watchlist-grid').style.display = 'none';
+                });
+            });
+            
+            // Back button click event
+            const backButtons = document.querySelectorAll('.profile-detail-back');
+            backButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.profile-detail').forEach(detail => {
+                        detail.style.display = 'none';
+                    });
+                    document.querySelector('.watchlist-grid').style.display = 'grid';
+                });
+            });
+            
+            // Filter change event
+            const filter = document.querySelector('.watchlist-filter');
+            filter.addEventListener('change', function() {
+                const selectedRole = this.value;
+                
+                if (selectedRole === 'all') {
+                    profileCards.forEach(card => {
+                        card.style.display = 'block';
+                    });
+                } else {
+                    profileCards.forEach(card => {
+                        const cardRoles = Array.from(card.querySelectorAll('.profile-card-tag')).map(tag => tag.textContent.toLowerCase());
+                        
+                        if (cardRoles.includes(selectedRole)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
